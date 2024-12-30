@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cat Clicker</title>
+    <style>
+
+        body {
+            text-align: center;
+            font-family: 'Press Start 2P', cursive; /* Retro-style font */
+            font-weight: bold;
+            /* Fullscreen background */
+            background-image: url("https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/26f2f0db-6467-4796-9f54-3305520828b4/de9twz6-cd509dcd-6766-48d9-b799-bf880e18fa65.png?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1cm46YXBwOjdlMGQxODg5ODIyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwiaXNzIjoidXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsIm9iaiI6W1t7InBhdGgiOiJcL2ZcLzI2ZjJmMGRiLTY0NjctNDc5Ni05ZjU0LTMzMDU1MjA4MjhiNFwvZGU5dHd6Ni1jZDUwOWRjZC02NzY2LTQ4ZDktYjc5OS1iZjg4MGUxOGZhNjUucG5nIn1dXSwiYXVkIjpbInVybjpzZXJ2aWNlOmZpbGUuZG93bmxvYWQiXX0.WbtFifhEV_AfHmCTwXRmxAMeWQj2Xl7GTC-P9VRhjys");
+            background-size: cover;
+            background-position: center;
+            /* Set body height to viewport height */
+            height: 100vh;
+            margin: 0; /* Remove default margin */
+            padding: 0; /* Remove default padding */
+            color: white; /* Set text color to white */
+        }
+
+        button {
+            text-align: center;
+            margin: 10px;
+            background: #ffcc99; /* Soft orange background */
+            color: black;
+            border: 2px solid black; /* Reduced border thickness */
+            border-radius: 10px; /* Increased border radius for a softer look */
+            font-family: 'Press Start 2P', cursive; /* Retro-style font */
+            font-weight: bold;
+            font-size: 20px; /* Slightly reduced font size */
+            padding: 10px 20px; /* Increased padding for a more spacious appearance */
+            cursor: pointer; /* Change cursor to pointer on hover */
+            transition: background-color 0.3s; /* Smooth transition on hover */
+            display: none; /* Initially hide the buttons */
+        }
+
+        button:hover {
+            background: #ffa64d; /* Lighter orange on hover */
+        }
+
+        /* Animation for the cat */
+        @keyframes catAnimation {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        /* Apply the animation to the cat when clicked */
+        .animate-cat {
+            animation: catAnimation 0.5s;
+        }
+
+        /* Add drop shadow to cat image */
+        #catImage {
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2); /* Horizontal offset, Vertical offset, Blur radius, Color */
+        }
+
+        /* Style for the version text */
+        .bottom-left {
+            position: absolute;
+            bottom: 8px;
+            left: 16px;
+            color: rgba(255, 255, 255, 0.8); /* White color with alpha transparency */
+            font-size: 18px;
+            text-align: left;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5); /* White text with black drop shadow */
+        }
+
+    </style>
+    <!-- Import Google Fonts -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap">
+</head>
+<body>
+    <!-- Shop icon -->
+    <img src="https://media.printables.com/media/prints/139211/images/1323029_1068d1ae-63cf-4820-8763-9e935d91ec63/thumbs/cover/800x800/png/coin-image.webp" width="100" alt="Shop Icon" class="shop-icon">
+
+    <h1 style="color: white; text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);">Cat Clicker</h1>
+    <img src="https://img-9gag-fun.9cache.com/photo/aGENqy5_460s.jpg" width="180" class="center" alt="Cat image" id="catImage">
+
+    <p>Clicks: <span id="clickCount">0</span></p>
+
+    <!-- Shop items -->
+    <div class="shop">
+        <!-- Buy Double Click button -->
+        <button id="buyDoubleClick" onclick="buyUpgrade('doubleClick', 100)">Buy Double Click (Costs 100 Clicks)</button>
+        <!-- Buy Auto Click button -->
+        <button id="buyAutoClick" onclick="buyUpgrade('autoClick', 50)">Buy Auto Click (Costs 50 Clicks)</button>
+        <!-- Buy Click Multiplier button -->
+        <!-- Add your Click Multiplier button here if needed -->
+    </div>
+
+    <script>
+        var clickCount = 0;
+        var lastClickTime = 0; // Variable to store the timestamp of the last click
+        var catImage = document.getElementById('catImage');
+        var clickCountDisplay = document.getElementById('clickCount');
+        var shopIcon = document.querySelector('.shop-icon'); // Select the shop icon
+        var shopItems = document.querySelectorAll('.shop button'); // Select all shop items
+        var clickValue = 1;
+        var autoclickerWarningShown = false; // Flag to track if autoclicker warning has been shown
+        var autoclickInterval; // Variable to store the interval for autoclick
+
+        // Toggle the visibility of the shop items when shop icon is clicked
+        shopIcon.addEventListener('click', function() {
+            shopItems.forEach(function(item) {
+                item.style.display = (item.style.display === 'none') ? 'inline-block' : 'none';
+            });
+        });
+
+        // Function to handle purchasing upgrades
+        function buyUpgrade(type, cost) {
+            if (clickCount >= cost) {
+                clickCount -= cost;
+                switch(type) {
+                    case 'doubleClick':
+                        clickValue *= 1;
+                        break;
+                    case 'autoClick':
+                        clickValue += 1;
+                        startAutoclick();
+                        break;
+                    case 'clickMultiplier':
+                        clickValue *= 1;
+                        break;
+                }
+                alert("You've bought " + type.replace(/([A-Z])/g, ' $1').trim() + "!");
+                clickCountDisplay.textContent = clickCount;
+            } else {
+                alert("Not enough clicks to buy " + type.replace(/([A-Z])/g, ' $1').trim() + "!");
+            }
+        }
+
+        // Function to start the autoclick interval
+        function startAutoclick() {
+            autoclickInterval = setInterval(function() {
+                catImage.click(); // Trigger a click event on the cat image
+            }, 1000); // Click once every second
+        }
+
+        // Add the animation class to the cat when clicked
+        catImage.addEventListener('click', function() {
+            var currentTime = new Date().getTime();
+            var elapsedTime = currentTime - lastClickTime;
+
+            if (elapsedTime > 100) { // Limit clicks to one per 100 milliseconds
+                clickCount += clickValue;
+                clickCountDisplay.textContent = clickCount;
+                catImage.classList.add('animate-cat'); // Add the animation class
+                // Remove the animation class after a delay
+                setTimeout(function() {
+                    catImage.classList.remove('animate-cat');
+                }, 500);
+
+                lastClickTime = currentTime; // Update last click time
+            } else {    
+                // Show warning message for autoclicker
+                if (!autoclickerWarningShown) {
+                    alert("Bro really thought he could use an auto clicker LMAO");
+                    autoclickerWarningShown = true;
+                }
+            }
+        });
+
+        console.log("Imagine ")
+    </script>
+
+    <!-- Version text -->
+    <div class="bottom-left"> 
+        <p>Cat Clicker version 1 (EARLY ACCESS)</p>
+    </div>
+</body>
+</html>
